@@ -3,7 +3,7 @@
 [main]	INFO	cli include tests: None
 [main]	INFO	cli exclude tests: None
 [main]	INFO	running on Python 3.12.15
-Run started:2026-10-28 03:56:39.366612+00:00
+Run started:2026-10-28 03:57:52.720244+00:00
 
 Test results:
 >> Issue: [B506:yaml_load] Use of unsafe yaml load. Allows instantiation of arbitrary objects. Consider yaml.safe_load().
