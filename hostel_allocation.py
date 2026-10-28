@@ -1,7 +1,7 @@
 """Utilities for a simple hostel room allocation system."""
 
 import os
-import random
+import secrets
 from typing import Any
 
 import yaml
@@ -119,7 +119,11 @@ def vacate_room(student_id: str) -> bool:
 
 def monthly_fee(student_id: str, days_stayed: int) -> int | float:
     """Calculate the fee for complete 30-day periods."""
-    if not isinstance(days_stayed, int) or days_stayed < 0:
+    if (
+        not isinstance(days_stayed, int)
+        or isinstance(days_stayed, bool)
+        or days_stayed < 0
+    ):
         raise ValueError("days_stayed must be a non-negative integer")
 
     allocation = allocations.get(student_id)
@@ -137,7 +141,7 @@ def priority_order(students: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def room_lottery(student_ids: list[str]) -> list[str]:
     """Return a randomized ordering of student IDs."""
-    return random.sample(student_ids, len(student_ids))
+    return secrets.SystemRandom().sample(student_ids, len(student_ids))
 
 
 def vacant_beds() -> int:
