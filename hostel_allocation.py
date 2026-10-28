@@ -1,12 +1,12 @@
-"""Hostel room allocation utilities with basic validation and a lookup portal."""
+"""Utilities for a simple hostel room allocation system."""
 
-import logging.config
 import os
 import random
 from typing import Any
 
 import yaml
-from flask import Flask, escape, request
+from flask import Flask, request
+from markupsafe import escape
 
 # In-memory hostel state.
 rooms: dict[str, dict[str, Any]] = {}
@@ -24,7 +24,9 @@ blocks:
 def load_config(text: str = CONFIG) -> dict[str, Any]:
     """Load room configuration safely and refresh the room inventory."""
     config = yaml.safe_load(text)
-    if not isinstance(config, dict) or not isinstance(config.get("blocks"), dict):
+    if not isinstance(config, dict) or not isinstance(
+        config.get("blocks"), dict
+    ):
         raise ValueError("Configuration must contain a 'blocks' mapping")
 
     rooms.clear()
@@ -33,17 +35,26 @@ def load_config(text: str = CONFIG) -> dict[str, Any]:
 
     for block, info in config["blocks"].items():
         if not isinstance(info, dict):
-            raise ValueError(f"Configuration for block {block!r} must be a mapping")
+            raise ValueError(
+                f"Configuration for block {block!r} must be a mapping"
+            )
         room_count = info.get("rooms")
         capacity = info.get("capacity")
         fee = info.get("fee")
         gender = info.get("gender")
+
         if not isinstance(room_count, int) or room_count < 1:
-            raise ValueError(f"Block {block!r} must have a positive room count")
+            raise ValueError(
+                f"Block {block!r} must have a positive room count"
+            )
         if not isinstance(capacity, int) or capacity < 1:
-            raise ValueError(f"Block {block!r} must have a positive room capacity")
+            raise ValueError(
+                f"Block {block!r} must have a positive room capacity"
+            )
         if not isinstance(fee, (int, float)) or fee < 0:
-            raise ValueError(f"Block {block!r} must have a non-negative fee")
+            raise ValueError(
+                f"Block {block!r} must have a non-negative fee"
+            )
         if gender not in {"M", "F"}:
             raise ValueError(f"Block {block!r} gender must be 'M' or 'F'")
 
@@ -64,7 +75,7 @@ def allocate_room(
     year: int,
     preferred: list[str] | None = None,
 ) -> str | None:
-    """Allocate a compatible available room, or add the student to the waitlist."""
+    """Allocate a compatible room or add the student to the waitlist."""
     if not isinstance(year, int) or isinstance(year, bool) or year < 1:
         return None
     if gender not in {"M", "F"} or student_id in allocations:
@@ -74,12 +85,11 @@ def allocate_room(
     room_order = list(dict.fromkeys(preferred_rooms + list(rooms.keys())))
     for room_no in room_order:
         room = rooms.get(room_no)
-        if room is None:
-            continue
-        if room["gender"] != gender:
+        if room is None or room["gender"] != gender:
             continue
         if len(room["occupants"]) >= room["capacity"]:
             continue
+
         room["occupants"].append(student_id)
         allocations[student_id] = {
             "name": name,
@@ -96,10 +106,11 @@ def allocate_room(
 
 
 def vacate_room(student_id: str) -> bool:
-    """Vacate a student's room and remove them from the allocation record."""
+    """Vacate a student's room and remove the associated allocation."""
     allocation = allocations.pop(student_id, None)
     if allocation is None:
         return False
+
     room = rooms.get(allocation["room"])
     if room is not None and student_id in room["occupants"]:
         room["occupants"].remove(student_id)
@@ -107,19 +118,20 @@ def vacate_room(student_id: str) -> bool:
 
 
 def monthly_fee(student_id: str, days_stayed: int) -> int | float:
-    """Calculate a fee in complete 30-day periods for an allocated student."""
+    """Calculate the fee for complete 30-day periods."""
     if not isinstance(days_stayed, int) or days_stayed < 0:
         raise ValueError("days_stayed must be a non-negative integer")
+
     allocation = allocations.get(student_id)
     if allocation is None:
-        raise KeyError(f"No room allocation found for student {student_id!r}")
+        raise KeyError(f"No allocation found for student {student_id!r}")
+
     room = rooms[allocation["room"]]
-    months = days_stayed // 30
-    return months * room["fee"]
+    return (days_stayed // 30) * room["fee"]
 
 
 def priority_order(students: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Sort students by seniority, with higher study years first."""
+    """Sort students by year of study, with seniors first."""
     return sorted(students, key=lambda student: student["year"], reverse=True)
 
 
@@ -137,7 +149,7 @@ def vacant_beds() -> int:
 
 
 def connect_warden_db() -> dict[str, str | bool]:
-    """Return a safe placeholder connection description without embedded secrets."""
+    """Describe the configured database connection without exposing secrets."""
     host = os.getenv("WARDEN_DB_HOST", "localhost")
     user = os.getenv("WARDEN_DB_USER", "warden")
     password = os.getenv("WARDEN_DB_PASSWORD")
@@ -149,18 +161,13 @@ def sqlite_connect(
     user: str,
     password: str | None,
 ) -> dict[str, str | bool]:
-    """Represent database connection status without returning credentials."""
+    """Return a placeholder status without returning credentials."""
     return {"host": host, "user": user, "connected": bool(password)}
-
-
-def start_remote_log_config() -> Any:
-    """Start the logging configuration listener only when explicitly requested."""
-    return logging.config.listen(9999)
 
 
 @app.route("/room")
 def room_lookup() -> str:
-    """Look up an allocation by student ID and return escaped HTML."""
+    """Look up a student's room and return escaped HTML."""
     student_id = request.args.get("id", "")
     allocation = allocations.get(student_id)
     if allocation is None:
@@ -171,7 +178,7 @@ def room_lookup() -> str:
 
 
 def run_portal() -> None:
-    """Run the portal without enabling the interactive debugger."""
+    """Run the web portal without enabling Flask's interactive debugger."""
     app.run(debug=False)
 
 
@@ -189,8 +196,10 @@ def main() -> None:
     vacate_room("S2")
     print("Occupants of A1 after S2 left:", rooms["A1"]["occupants"])
     print("Fee for S1, 45 days:", monthly_fee("S1", 45))
-    years = priority_order([{"year": 1}, {"year": 4}, {"year": 2}])
-    print("Priority (seniors first?):", [student["year"] for student in years])
+    sample = [{"year": 1}, {"year": 4}, {"year": 2}]
+    print("Priority (seniors first?):", [
+        student["year"] for student in priority_order(sample)
+    ])
     print("Lottery:", room_lottery(["S6", "S7", "S8"]))
     print("Vacant beds:", vacant_beds())
     print("Warden DB:", connect_warden_db())
