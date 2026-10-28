@@ -1,56 +1,72 @@
-# Lab 5: Static Code Analysis — Hostel Room Allocation System
+# Lab 5: Static Code Analysis: Hostel Room Allocation System
 
-**Your file:** `hostel_allocation.py`
+**Main program:** `hostel_allocation.py`
 
-Follow the lab handout for the full instructions.
+This repository is for Lab 5. The goal is to review Python code using Pylint, Bandit, and Flake8, fix security, logic, and style issues, and document the results.
 
 ## About the program
 
-A college hostel room allocation system. It reads a YAML room configuration, allocates beds by block and gender, vacates rooms, calculates fees, orders students by seniority, runs a room lottery, counts vacant beds, and includes a small Flask page for looking up a student's room.
+The example hostel allocation system loads a room configuration, allocates rooms by gender and capacity, vacates rooms, calculates fees, orders students by seniority, runs a lottery, counts vacant beds, and provides a small Flask room lookup endpoint.
 
-The code works, but only just. It has quality, style and security problems of the kind Pylint, Flake8 and Bandit are built to find.
+## Run locally
 
-## What to do
+Create and activate a virtual environment, then install the dependencies and tools:
 
-1. **Install the program's packages** (it uses Flask and PyYAML):
-   ```bash
-   python -m pip install flask pyyaml
-   ```
+```bash
+python -m venv .venv
+```
 
-2. **Run it** and read the output carefully:
-   ```bash
-   python hostel_allocation.py
-   ```
-   Check whether every allocation and number it prints makes sense, then try changing the inputs in `main()` to see what happens. Not every problem in this file is something a tool will flag, so pay attention to output that looks wrong.
+On Windows PowerShell:
 
-3. **Install the tools:**
-   ```bash
-   python -m pip install pylint bandit flake8
-   ```
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-4. **Run the analysis** and save the reports:
-   ```bash
-   python -m pylint hostel_allocation.py > pylint_report.txt
-   python -m bandit -r hostel_allocation.py > bandit_report.txt
-   python -m flake8 hostel_allocation.py > flake8_report.txt
-   ```
+On macOS or Linux:
 
-5. **Document the issues** in `issues.md` using this table (at least 4 rows, high and medium severity first):
+```bash
+source .venv/bin/activate
+```
 
-   | Issue | Type | Line(s) | Description | Fix Approach |
-   |-------|------|---------|-------------|--------------|
-   | ... | ... | ... | ... | ... |
+Install the packages:
 
-6. **Fix the code.** Fix at least 4 of the issues you documented, then rerun all three tools to confirm they are gone. Repeat until you are satisfied. The program should still do its job when you are done.
+```bash
+python -m pip install flask markupsafe pyyaml pylint bandit flake8
+```
 
-7. **Reflect.** Answer the four reflection questions from the handout in `reflection.md`.
+Run the program:
 
-## Deliverables
+```bash
+python hostel_allocation.py
+```
 
-1. `hostel_allocation.py`: your cleaned version, with at least 4 issues fixed.
-2. `issues.md`: the completed issue table.
-3. `reflection.md`: your answers to the reflection questions.
+## Static analysis reports
 
-**Target:** aim for a Pylint score above 9.5 on your final file. A perfect 10.00/10 is very good.
+The GitHub Actions workflow at `.github/workflows/static-analysis.yml` runs all three tools against the preserved original version in `baseline/hostel_allocation_before.py` and the cleaned program in `hostel_allocation.py`. It also compiles and runs the cleaned program.
 
-Be ready to explain the bugs you found and how you fixed them. You may be called on to present.
+The workflow generates and commits these files to the repository:
+
+- `pylint_report_before.txt` and `pylint_report_after.txt`
+- `bandit_report_before.txt` and `bandit_report_after.txt`
+- `flake8_report_before.txt` and `flake8_report_after.txt`
+
+The reports include each tool's output and exit status. Review the generated results after the GitHub Actions run completes. The intended target is a Pylint score above 9.5, no remaining Bandit findings requiring action, and no Flake8 errors.
+
+## Assignment documentation
+
+- `issues.md`: documented security, logic, and code-quality findings, with original line numbers.
+- `reflection.md`: reflection responses about the use and limitations of static analysis.
+- `baseline/hostel_allocation_before.py`: preserved original code used to generate before-fix reports.
+
+The supplied lab handout does not show the exact wording of the four reflection questions. If your instructor provided those questions separately, update the reflection headings to match them.
+
+## Main improvements
+
+- Uses `yaml.safe_load` and validates the room configuration.
+- Uses a fresh list for each allocation call rather than a mutable default argument.
+- Checks the room's capacity and gender before allocation, and prevents duplicate allocations.
+- Removes a student from both the allocation map and room occupants when vacating.
+- Counts remaining beds in partially occupied rooms.
+- Reads database settings from environment variables instead of embedding a password.
+- Disables Flask debug mode, escapes user-controlled text in the lookup response, and removes the remote logging configuration listener.
+- Uses a system-backed random sampler for the lottery.
