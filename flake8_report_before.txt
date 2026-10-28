@@ -1,0 +1,22 @@
+baseline/hostel_allocation_before.py:1:1: F401 'os' imported but unused
+baseline/hostel_allocation_before.py:2:1: F401 'sys' imported but unused
+baseline/hostel_allocation_before.py:20:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:25:80: E501 line too long (92 > 79 characters)
+baseline/hostel_allocation_before.py:29:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:30:8: E721 do not compare types, for exact checks use `is` / `is not`, for instance checks use `isinstance()`
+baseline/hostel_allocation_before.py:41:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:47:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:52:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:55:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:58:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:65:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:66:80: E501 line too long (81 > 79 characters)
+baseline/hostel_allocation_before.py:68:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:71:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:74:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:79:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:82:1: E302 expected 2 blank lines, found 1
+baseline/hostel_allocation_before.py:95:80: E501 line too long (116 > 79 characters)
+baseline/hostel_allocation_before.py:101:1: E305 expected 2 blank lines after class or function definition, found 1
+
+Command exit status: 1
