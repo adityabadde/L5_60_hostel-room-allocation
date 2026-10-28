@@ -1,0 +1,81 @@
+name: Static code analysis
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the program and analysis tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flask pyyaml pylint bandit flake8
+
+      - name: Generate before-and-after reports
+        shell: bash
+        run: |
+          set +e
+
+          python -m pylint baseline/hostel_allocation_before.py > pylint_report_before.txt 2>&1
+          code=$?
+          echo "" >> pylint_report_before.txt
+          echo "Command exit status: $code" >> pylint_report_before.txt
+
+          python -m bandit -r baseline/hostel_allocation_before.py > bandit_report_before.txt 2>&1
+          code=$?
+          echo "" >> bandit_report_before.txt
+          echo "Command exit status: $code" >> bandit_report_before.txt
+
+          python -m flake8 baseline/hostel_allocation_before.py > flake8_report_before.txt 2>&1
+          code=$?
+          echo "" >> flake8_report_before.txt
+          echo "Command exit status: $code" >> flake8_report_before.txt
+
+          python -m pylint hostel_allocation.py > pylint_report_after.txt 2>&1
+          code=$?
+          echo "" >> pylint_report_after.txt
+          echo "Command exit status: $code" >> pylint_report_after.txt
+
+          python -m bandit -r hostel_allocation.py > bandit_report_after.txt 2>&1
+          code=$?
+          echo "" >> bandit_report_after.txt
+          echo "Command exit status: $code" >> bandit_report_after.txt
+
+          python -m flake8 hostel_allocation.py > flake8_report_after.txt 2>&1
+          code=$?
+          echo "" >> flake8_report_after.txt
+          echo "Command exit status: $code" >> flake8_report_after.txt
+
+      - name: Check Python syntax and run the demonstration
+        run: |
+          python -m py_compile hostel_allocation.py
+          python hostel_allocation.py
+
+      - name: Commit generated reports
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pylint_report_before.txt pylint_report_after.txt
+          git add bandit_report_before.txt bandit_report_after.txt
+          git add flake8_report_before.txt flake8_report_after.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Add generated before-and-after static analysis reports"
+            git push
+          fi
